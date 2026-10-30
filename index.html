@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Chhath Ghat Patna</title>
+<meta name="description" content="A shared 3D Chhath Puja ghat in Patna. No signup — just open and join.">
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="topleft" class="panel">
+    <div class="title">छठ घाट <span>· Patna</span></div>
+    <div id="phase">—</div>
+    <div id="phaseSub"></div>
+    <div id="bless" class="hidden">☀️ Arghya time</div>
+    <div id="music"><span>🎵</span><span id="musicTitle">…</span><button id="mute" title="Mute loudspeakers (M)">🔊</button></div>
+  </div>
+  <div id="topright" class="panel">
+    <div id="net" title="Connection">🟡 Connecting…</div>
+    <button id="invite">🔗 Copy invite link</button>
+    <button id="gfx"></button>
+  </div>
+  <div id="hint"></div>
+  <div id="soop" class="panel hidden"><div id="shop"></div><div id="soopItems"></div></div>
+  <div id="chatlog"></div>
+  <div id="chatbox" class="hidden panel"><div id="quick"></div><input id="chatin" maxlength="80" placeholder="Say something… (Enter to send, Esc to close)"></div>
+  <div id="actions">
+    <button id="bChat" title="Chat (Enter)">💬</button>
+    <button id="bDiya" title="Float a diya (F)">🪔<small>Diya</small></button>
+    <button id="bArghya" title="Offer Arghya (E)">🙏<small>Arghya</small></button>
+  </div>
+  <div id="joy"><div id="knob"></div></div>
+  <div id="toast"></div>
+</div>
+
+<div id="start">
+  <div class="card">
+    <div class="sun"></div>
+    <h1>Chhath Ghat</h1>
+    <p class="sub">Patna · on the banks of Ganga ji</p>
+    <p class="desc">Join devotees on the ghats of Patna. At the <b>Chhath Bazaar</b> on either end of the ghat, pick up a soop &amp; daura
+      and fill it with <b>thekua 🍪, kela 🍌, nariyal 🥥, ganna 🎋 &amp; santra 🍊</b> from the stalls, then wade into the Ganga and offer <b>Arghya</b> to Surya Dev at <b>sunset (Sandhya)</b> and <b>sunrise (Usha)</b>.
+      Float diyas on the river with everyone who's online.</p>
+    <label>Your name <input id="name" maxlength="16" autocomplete="off"></label>
+    <label>You are <div id="kinds"></div></label>
+    <label>Colour of your saree / dhoti <div id="colors"></div></label>
+    <label>Room <input id="room" maxlength="24" placeholder="public — leave blank to join everyone" autocomplete="off"></label>
+    <button id="go">Enter the Ghat 🙏</button>
+    <p class="keys">WASD / arrows: walk · drag: look · scroll: zoom · E: arghya · F: diya · M: music · G: graphics · Enter: chat · 1–6: quick chat</p>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
