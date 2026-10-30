@@ -11,6 +11,9 @@ import { createMusic } from './music.js';
 
 // ---------------------------------------------------------------- constants
 const APP = 'chhath-patna-ghat-v1';
+// shown on the hoarding in the river and the start screen
+const DEV = { name:'Saurav Ganguly', role:'Developer', url:'https://www.sauravganguly.in/', link:'www.sauravganguly.in',
+  photo:'https://avatars.githubusercontent.com/u/58353139?s=320' };
 const DAY = 300;               // seconds in one game day
 const DIYA_LIFE = 140000;      // ms
 const ARGHYA_COOLDOWN = 3000;  // ms
@@ -387,6 +390,51 @@ const screenPos = new THREE.Vector3(-22, 7.2, 17), screenYaw = 2.55;
   const css = new CSS3DObject(el); css.position.copy(screenPos); css.rotation.y = screenYaw; css.scale.setScalar(SCREEN_W/SCREEN_PX);
   cssScene.add(css);
 }
+// developer hoarding standing on the land just past the right-hand bazaar, angled towards the ghat; tap it to visit
+const devBoard = (() => {
+  const W = 12, H = 6;
+  // drawn once straight away, then again with the photo once it has loaded
+  const draw = (g, w, h, photo) => {
+    const bg = g.createLinearGradient(0, 0, w, h); bg.addColorStop(0, '#5a0f1f'); bg.addColorStop(1, '#2a0a35');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#ffd166'; g.lineWidth = 10; g.strokeRect(18, 18, w - 36, h - 36);
+    // the photo sits in a gold ring on a rising-sun glow
+    const cx = w - 160, cy = h/2 - 6, R = 88;
+    const sun = g.createRadialGradient(cx, cy, R*0.6, cx, cy, R*1.6);
+    sun.addColorStop(0, '#ffb347'); sun.addColorStop(0.45, 'rgba(255,138,31,.55)'); sun.addColorStop(1, 'rgba(255,106,26,0)');
+    g.fillStyle = sun; g.fillRect(cx - R*1.7, cy - R*1.7, R*3.4, R*3.4);
+    g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI*2); g.clip();
+    if (photo) g.drawImage(photo, cx - R, cy - R, R*2, R*2);
+    else { g.fillStyle = '#3b1530'; g.fillRect(cx - R, cy - R, R*2, R*2); }
+    g.restore();
+    g.strokeStyle = '#ffd166'; g.lineWidth = 8; g.beginPath(); g.arc(cx, cy, R + 4, 0, Math.PI*2); g.stroke();
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 8;
+    g.fillStyle = '#ffd166'; g.font = '700 34px system-ui,sans-serif'; g.fillText('🙏  Crafted with ❤️ by', 70, 110);
+    g.fillStyle = '#fff8ec'; g.font = '800 82px system-ui,sans-serif'; g.fillText(DEV.name, 70, 210);
+    g.fillStyle = '#ffb347'; g.font = '600 40px system-ui,sans-serif'; g.fillText(DEV.role, 72, 270);
+    g.shadowBlur = 0; g.fillStyle = 'rgba(255,209,102,.16)'; g.beginPath(); g.roundRect(66, 318, 560, 70, 35); g.fill();
+    g.fillStyle = '#fff8ec'; g.font = '600 36px system-ui,sans-serif'; g.fillText(`🔗  ${DEV.link}`, 92, 365);
+    g.fillStyle = '#ffd166'; g.font = '600 26px system-ui,sans-serif'; g.fillText('Tap the board to say hello · Jai Chhathi Maiya', 70, 448);
+  };
+  const tex = canvasTex(1024, 512, (g, w, h) => draw(g, w, h, null));
+  // GitHub serves avatars with CORS, so the canvas stays untainted and can still be uploaded as a texture
+  const img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = () => { const c = tex.image; draw(c.getContext('2d'), c.width, c.height, img); tex.needsUpdate = true; };
+  img.src = DEV.photo;
+  const LEGS = 6;   // tall enough to clear the bazaar gate sign when seen from the ghat
+  const g = new THREE.Group(); g.position.set(69, 3.2 + LEGS + H/2, -19); g.rotation.y = -1.1; scene.add(g);
+  const frameMat = std(0x1d1d22, { roughness:.6 });
+  const back = new THREE.Mesh(new THREE.BoxGeometry(W + 0.6, H + 0.6, 0.3), frameMat); back.position.z = -0.2; g.add(back);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map:tex, toneMapped:false, fog:false }));
+  face.position.z = 0.01; g.add(face);
+  for (const sx of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.35, LEGS + 0.4, 0.35), frameMat); leg.position.set(sx*(W/2 - 1.2), -H/2 - LEGS/2 + 0.2, -0.2); g.add(leg);
+  }
+  const title = textSprite('📣 Developer', { height:0.8, bg:'rgba(255,138,31,.9)', color:'#1b0f00' });
+  title.position.set(0, H/2 + 0.9, 0); g.add(title);
+  return face;
+})();
+
 // projector on the x=-14 speaker pole, throwing a light beam onto the screen
 const projector = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 1.1), std(0x2b2b30)); projector.position.set(-14, 11, -15.2); scene.add(projector);
 projector.lookAt(screenPos);
@@ -1046,13 +1094,24 @@ addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 let drag = null;
-canvas.addEventListener('pointerdown', e => { drag = { id:e.pointerId, x:e.clientX, y:e.clientY }; canvas.setPointerCapture(e.pointerId); if (isTyping()) chatin.blur(); });
+canvas.addEventListener('pointerdown', e => { drag = { id:e.pointerId, x:e.clientX, y:e.clientY, x0:e.clientX, y0:e.clientY, t0:performance.now() }; canvas.setPointerCapture(e.pointerId); if (isTyping()) chatin.blur(); });
 canvas.addEventListener('pointermove', e => {
   if (!drag || e.pointerId !== drag.id) return;
   camYaw -= (e.clientX - drag.x)*0.006; camPitch = clamp(camPitch + (e.clientY - drag.y)*0.004, 0.05, 1.25);
   drag.x = e.clientX; drag.y = e.clientY;
 });
-const endDrag = e => { if (drag?.id === e.pointerId) drag = null; };
+// a quick tap (not a camera drag) on the developer hoarding opens the developer's page
+const raycaster = new THREE.Raycaster();
+function tapBoard(e) {
+  const r = canvas.getBoundingClientRect();
+  raycaster.setFromCamera(new THREE.Vector2((e.clientX - r.left)/r.width*2 - 1, -(e.clientY - r.top)/r.height*2 + 1), camera);
+  if (raycaster.intersectObject(devBoard).length) window.open(DEV.url, '_blank', 'noopener');
+}
+const endDrag = e => {
+  if (drag?.id !== e.pointerId) return;
+  if (e.type === 'pointerup' && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 8 && performance.now() - drag.t0 < 500) tapBoard(e);
+  drag = null;
+};
 canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
 canvas.addEventListener('wheel', e => { camDist = clamp(camDist + e.deltaY*0.01, 3, 16); }, { passive:true });
 
@@ -1098,6 +1157,7 @@ $('#invite').onclick = async () => {
 
 // ---------------------------------------------------------------- start screen
 const NAMES = ['Sunita','Rajesh','Pinky','Munna','Guddu','Rinki','Bablu','Savitri','Chhotu','Anita','Pappu','Kiran','Sonu','Lalita'];
+$('#credit').href = DEV.url; $('#credit').textContent = DEV.name;
 $('#name').value = (() => { try { return localStorage.getItem('chhath-name'); } catch { return null; } })() || NAMES[(Math.random()*NAMES.length)|0];
 const roomParam = clean(new URLSearchParams(location.search).get('room') || '', 24).toLowerCase();
 $('#room').value = roomParam && roomParam !== 'public' ? roomParam : '';
